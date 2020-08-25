@@ -126,7 +126,7 @@ def runge_kutta_step(func, y0, f0, t0, dt):
     return ops.index_update(k, jax.ops.index[i, :], ft)
 
   k = ops.index_update(np.zeros((7, f0.shape[0])), ops.index[0, :], f0)
-  k = lax.fori_loop(1, 7, body_fun, k)
+  k = lax.fori_loop(1, 7, body_fun[0], k)
 
   y1 = dt * np.dot(c_sol, k) + y0
   y1_error = dt * np.dot(c_error, k)
@@ -840,10 +840,11 @@ def _dopri5_odeint(func, rtol, atol, mxstep, y0, ts, *args):
 
       new = [i + 1, next_y, next_f, next_t, dt,      t, new_interp_coeff]
       old = [i + 1,      y,      f,      t, dt, last_t,     interp_coeff]
-      return map(partial(np.where, np.all(error_ratios <= 1.)), new, old)
+      return map(partial(np.where, np.all(error_ratios <= 1.)), new, old), next_y_error
 
     nfe = carry[-1]
-    n_steps, *carry_ = lax.while_loop(cond_fun, body_fun, [0] + carry[:-1])
+    n_steps, *carry_ = lax.while_loop(cond_fun, body_fun[0], [0] + carry[:-1])
+    dopri_err = body_fun[1]
     carry = carry_ + [nfe + 6 * n_steps]
     _, _, t, _, last_t, interp_coeff = carry[:-1]
     relative_output_time = (target_t - last_t) / (t - last_t)
