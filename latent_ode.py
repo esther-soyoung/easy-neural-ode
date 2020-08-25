@@ -466,8 +466,8 @@ def run():
     """
 
     ds_train, ds_test, meta = init_physionet_data(rng, parse_args)
-    num_batches = meta["num_batches"]
-    num_test_batches = meta["num_test_batches"]
+    num_batches = meta["num_batches"]  # 128
+    num_test_batches = meta["num_test_batches"]  # 64
 
     model = init_model(ode_kwargs)
     forward = lambda *args: model["forward"](*args)[1:]
